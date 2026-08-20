@@ -51,7 +51,7 @@ describe("normalizeDueDate", () => {
     expect(result).toBe("2026-08-26");
   });
 
-  it("should return the next Thursday", () => {
+  it("should return the next Thursday when today is Thursday", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 7, 20, 12, 0, 0));
 
