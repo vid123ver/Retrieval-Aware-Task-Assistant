@@ -15,6 +15,63 @@ describe("taskService", () => {
     vi.clearAllMocks();
   });
 
+  describe("findAll", () => {
+    it("should return all tasks", async () => {
+      const tasks = [
+        {
+          id: "task-1",
+          title: "First Task",
+          completed: false,
+          priority: "low" as const,
+        },
+        {
+          id: "task-2",
+          title: "Second Task",
+          completed: true,
+          priority: "high" as const,
+        },
+      ];
+
+      mockReadTasks.mockResolvedValue(tasks);
+
+      const result = await taskService.findAll();
+
+      expect(result).toEqual(tasks);
+      expect(mockReadTasks).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("findById", () => {
+    it("should return a task when the task exists", async () => {
+      const task = {
+        id: "task-1",
+        title: "Complete Assignment 4",
+        completed: false,
+        priority: "high" as const,
+        dueDate: "2026-08-25",
+      };
+
+      mockReadTasks.mockResolvedValue([task]);
+
+      const result = await taskService.findById("task-1");
+
+      expect(result).toEqual(task);
+      expect(mockReadTasks).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw 404 when the task does not exist", async () => {
+      mockReadTasks.mockResolvedValue([]);
+
+      await expect(
+        taskService.findById("missing-task")
+      ).rejects.toMatchObject({
+        statusCode: 404,
+      });
+
+      expect(mockReadTasks).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("create", () => {
     it("should create a new task", async () => {
       mockReadTasks.mockResolvedValue([]);
@@ -42,7 +99,7 @@ describe("taskService", () => {
           id: "task-1",
           title: "Complete Assignment 4",
           completed: false,
-          priority: "high",
+          priority: "high" as const,
           dueDate: "2026-08-25",
         },
       ]);
@@ -57,34 +114,6 @@ describe("taskService", () => {
       });
 
       expect(mockWriteTasks).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("findById", () => {
-    it("should return a task when the task exists", async () => {
-      const task = {
-        id: "task-1",
-        title: "Complete Assignment 4",
-        completed: false,
-        priority: "high" as const,
-        dueDate: "2026-08-25",
-      };
-
-      mockReadTasks.mockResolvedValue([task]);
-
-      const result = await taskService.findById("task-1");
-
-      expect(result).toEqual(task);
-    });
-
-    it("should throw 404 when the task does not exist", async () => {
-      mockReadTasks.mockResolvedValue([]);
-
-      await expect(
-        taskService.findById("missing-task")
-      ).rejects.toMatchObject({
-        statusCode: 404,
-      });
     });
   });
 
@@ -139,13 +168,13 @@ describe("taskService", () => {
           id: "task-1",
           title: "First Task",
           completed: false,
-          priority: "low",
+          priority: "low" as const,
         },
         {
           id: "task-2",
           title: "Second Task",
           completed: false,
-          priority: "medium",
+          priority: "medium" as const,
         },
       ]);
 
@@ -176,7 +205,6 @@ describe("taskService", () => {
       await taskService.remove("task-1");
 
       expect(mockWriteTasks).toHaveBeenCalledTimes(1);
-
       expect(mockWriteTasks).toHaveBeenCalledWith([]);
     });
 
@@ -194,7 +222,7 @@ describe("taskService", () => {
   });
 
   describe("toggle", () => {
-    it("should toggle task completion status", async () => {
+    it("should toggle an incomplete task to completed", async () => {
       const task = {
         id: "task-1",
         title: "Toggle Task",
@@ -208,6 +236,23 @@ describe("taskService", () => {
       const result = await taskService.toggle("task-1");
 
       expect(result.completed).toBe(true);
+      expect(mockWriteTasks).toHaveBeenCalledTimes(1);
+    });
+
+    it("should toggle a completed task back to incomplete", async () => {
+      const task = {
+        id: "task-1",
+        title: "Toggle Task",
+        completed: true,
+        priority: "medium" as const,
+      };
+
+      mockReadTasks.mockResolvedValue([task]);
+      mockWriteTasks.mockResolvedValue(undefined);
+
+      const result = await taskService.toggle("task-1");
+
+      expect(result.completed).toBe(false);
       expect(mockWriteTasks).toHaveBeenCalledTimes(1);
     });
 
