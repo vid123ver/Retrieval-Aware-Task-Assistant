@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f9fafb;
+  color: #111827;
+  font-family: Arial, sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #111827;
+  outline-offset: 2px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 50%);
+  padding: 1rem;
+}
+
+.modal-box {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: 1.5rem;
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 10%),
+    0 10px 10px -5px rgb(0 0 0 / 4%);
+}
+
+.modal-box p {
+  margin: 0;
+  color: #374151;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  margin-top: 1.5rem;
+}
+
+.cancel-btn {
+  border: 1px solid #d1d5db;
+  border-radius: 0.625rem;
+  background: #ffffff;
+  color: #374151;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.cancel-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.confirm-btn {
+  border-radius: 0.625rem;
+  background: #dc2626;
+  color: #ffffff;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 150ms ease;
+}
+
+.confirm-btn:hover {
+  background: #b91c1c;
+}
+
+@media (max-width: 480px) {
+  .modal-box {
+    max-width: calc(100% - 2rem);
+    padding: 1.25rem;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancel-btn,
+  .confirm-btn {
+    width: 100%;
+  }
+}
