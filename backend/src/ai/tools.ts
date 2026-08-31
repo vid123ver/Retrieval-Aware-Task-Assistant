@@ -24,14 +24,12 @@ export const taskTools: FunctionDeclaration[] = [
           description:
             "The title or description of the new task provided by the user.",
         },
-
         priority: {
           type: Type.STRING,
           enum: ["low", "medium", "high"],
           description:
             "The priority of the task. Only set this if the user explicitly states a priority. If the user does not mention a priority, omit this field entirely and let it default.",
         },
-
         dueDate: {
           type: Type.STRING,
           description:
@@ -53,25 +51,21 @@ export const taskTools: FunctionDeclaration[] = [
           type: Type.STRING,
           description: "The unique ID of the task to update.",
         },
-
         title: {
           type: Type.STRING,
           description: "The new title of the task.",
         },
-
         completed: {
           type: Type.BOOLEAN,
           description:
             "The completion status of the task. True means completed and false means pending.",
         },
-
         priority: {
           type: Type.STRING,
           enum: ["low", "medium", "high"],
           description:
             "The new priority of the task. Only set this if the user explicitly asks to change the task's priority.",
         },
-
         dueDate: {
           type: Type.STRING,
           description:
@@ -95,6 +89,23 @@ export const taskTools: FunctionDeclaration[] = [
         },
       },
       required: ["id"],
+    },
+  },
+
+  {
+    name: "answer_from_notes",
+    description:
+      "Use this tool when the user asks about information they previously saved in their notes, such as decisions, plans, requirements, preferences, or other remembered information. Use this tool when the answer should come from the user's saved notes. Do not use this tool for creating, updating, deleting, or listing tasks. Do not use it for general knowledge questions that are unrelated to the user's notes.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        question: {
+          type: Type.STRING,
+          description:
+            "The user's question about information that may exist in their saved notes.",
+        },
+      },
+      required: ["question"],
     },
   },
 ];

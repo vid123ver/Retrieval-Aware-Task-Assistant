@@ -5,12 +5,14 @@ import * as taskService from "./taskService";
 import { systemInstruction } from "../ai/systemInstruction";
 import { AppError } from "../utils/AppError";
 import { normalizeDueDate } from "../utils/dateUtils";
+import { retrieveRelevantNotes } from "./retrievalService";
 
 type ChatActionType =
   | "create_task"
   | "update_task"
   | "delete_task"
-  | "list_tasks";
+  | "list_tasks"
+  | "answer_from_notes";
 
 interface ChatAction {
   type: ChatActionType;
@@ -98,12 +100,13 @@ class GeminiService {
                 dueDate?: string;
               };
 
-              let normalizedDueDate: string | undefined;
+              let normalizedDueDate:
+                | string
+                | undefined;
 
               if (args.dueDate !== undefined) {
-                const parsedDueDate = normalizeDueDate(
-                  args.dueDate
-                );
+                const parsedDueDate =
+                  normalizeDueDate(args.dueDate);
 
                 if (!parsedDueDate) {
                   throw new AppError(
@@ -115,11 +118,12 @@ class GeminiService {
                 normalizedDueDate = parsedDueDate;
               }
 
-              const newTask = await taskService.create(
-                args.title,
-                args.priority ?? "medium",
-                normalizedDueDate
-              );
+              const newTask =
+                await taskService.create(
+                  args.title,
+                  args.priority ?? "medium",
+                  normalizedDueDate
+                );
 
               actions.push({
                 type: "create_task",
@@ -158,9 +162,8 @@ class GeminiService {
               };
 
               if (args.dueDate !== undefined) {
-                const parsedDueDate = normalizeDueDate(
-                  args.dueDate
-                );
+                const parsedDueDate =
+                  normalizeDueDate(args.dueDate);
 
                 if (!parsedDueDate) {
                   throw new AppError(
@@ -172,10 +175,11 @@ class GeminiService {
                 updates.dueDate = parsedDueDate;
               }
 
-              const updatedTask = await taskService.update(
-                args.id,
-                updates
-              );
+              const updatedTask =
+                await taskService.update(
+                  args.id,
+                  updates
+                );
 
               actions.push({
                 type: "update_task",
@@ -215,6 +219,56 @@ class GeminiService {
               });
             }
 
+            else if (
+              call.name === "answer_from_notes"
+            ) {
+              const args = call.args as {
+                question: string;
+              };
+
+              const relevantNotes =
+                await retrieveRelevantNotes(
+                  args.question
+                );
+
+              actions.push({
+                type: "answer_from_notes",
+              });
+
+              if (relevantNotes.length === 0) {
+                functionResponses.push({
+                  functionResponse: {
+                    name: call.name,
+                    id: call.id,
+                    response: {
+                      found: false,
+                      message:
+                        "No relevant information was found in the user's saved notes. Do not guess or make up an answer.",
+                    },
+                  },
+                });
+              } else {
+                functionResponses.push({
+                  functionResponse: {
+                    name: call.name,
+                    id: call.id,
+                    response: {
+                      found: true,
+                      notes: relevantNotes.map(
+                        (item) => ({
+                          text: item.note.text,
+                          similarity:
+                            item.similarity,
+                        })
+                      ),
+                      instruction:
+                        "Answer the user's question using only the retrieved notes. Do not add information that is not supported by these notes.",
+                    },
+                  },
+                });
+              }
+            }
+
             else {
               functionResponses.push({
                 functionResponse: {
@@ -232,7 +286,7 @@ class GeminiService {
                 ? error.message
                 : error instanceof Error
                   ? error.message
-                  : "The requested task operation could not be completed.";
+                  : "The requested operation could not be completed.";
 
             functionResponses.push({
               functionResponse: {
@@ -252,27 +306,33 @@ class GeminiService {
       }
 
       return {
-        reply: response.text ?? "No response from Gemini.",
+        reply:
+          response.text ??
+          "No response from Gemini.",
         actions,
       };
     } catch (error) {
-  console.error("Gemini API Error:", error);
+      console.error("Gemini API Error:", error);
 
-  const status = (error as { status?: number }).status;
+      const status = (
+        error as { status?: number }
+      ).status;
 
-  if (status === 429) {
-    throw new AppError(
-      "Gemini API quota exceeded. Please wait a while or try again later.",
-      429
-    );
-  }
+      if (status === 429) {
+        throw new AppError(
+          "Gemini API quota exceeded. Please wait a while or try again later.",
+          429
+        );
+      }
 
-  if (error instanceof Error) {
-    throw error;
-  }
+      if (error instanceof Error) {
+        throw error;
+      }
 
-  throw new Error("Unknown error occurred.");
-}
+      throw new Error(
+        "Unknown error occurred."
+      );
+    }
   }
 }
 
