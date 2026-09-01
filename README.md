@@ -65,7 +65,6 @@ grounded answer (or "couldn't find anything relevant" if none match)
 1. `POST /notes` — save a free-text note. It's embedded via Gemini's embedding model and kept in-memory as `{ text, embedding }`.
 2. Chat has a new `answer_from_notes(question)` tool alongside the task tools. Gemini picks the right tool based on the question — "what did I decide about X" → notes tool, "add a task" → task tools.
 3. The question is embedded, compared to every note via cosine similarity, and the top 3 matches are sent to Gemini to produce an answer grounded only in those notes.
-4. If nothing relevant is found, the assistant says so instead of guessing — this is explicitly tested.
 
 **Try it:**
 ```bash
