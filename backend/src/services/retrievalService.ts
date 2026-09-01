@@ -8,6 +8,8 @@ interface RetrievedNote {
   similarity: number;
 }
 
+const MINIMUM_SIMILARITY = 0.5;
+
 export const retrieveRelevantNotes = async (
   question: string,
   limit = 3
@@ -28,9 +30,13 @@ export const retrieveRelevantNotes = async (
     ),
   }));
 
-  scoredNotes.sort(
+  const relevantNotes = scoredNotes.filter(
+    (item) => item.similarity >= MINIMUM_SIMILARITY
+  );
+
+  relevantNotes.sort(
     (a, b) => b.similarity - a.similarity
   );
 
-  return scoredNotes.slice(0, limit);
+  return relevantNotes.slice(0, limit);
 };
