@@ -1,22 +1,27 @@
-# Writeup
- 
-## What I learned
-I learned how an AI model can actually call functions/tools instead of just
-replying with text, and how MCP servers work to connect an AI client (like
-Claude Desktop) to my own APIs.
-I also learned the difference between an
-MCP server and an MCP client — the server exposes tools, the client (like
-Claude Desktop) is what connects to it and actually calls those tools.
- 
-## What confused me
-The main problem I faced was understanding Gemini's structure — how the
-chat, system instruction, and function declarations all connect together,
-and getting the API key and model setup right. I also face problem in
-MCP server configuration, especially connecting it properly to Claude
-Desktop and making sure the token and URL matched the backend.
- 
+# Writeup — Phase 2 (Retrieval)
 
-Adding new features like due date and priority later meant changing code in
-almost every layer (tool schema, service, MCP tool, frontend form). Next
-time I'd plan the task fields upfront so I don't have to restructure
-everything just to add one new field.
+## What I learned
+
+I learned how retrieval (RAG) actually works end to end — turning text into
+an embedding, comparing embeddings with cosine similarity, and pulling the
+top-matching notes to ground an answer instead of letting the model guess.
+I created a notes system where users can save notes, and Gemini converts
+each note into a searchable format (an embedding), stored alongside the
+note text. I also added secure APIs to add and view notes, protected by
+the same token-based auth as the rest of the app.
+
+I also learned how to properly mock things in Vitest — including a subtlety
+I hadn't run into before: `vi.mock()` calls are hoisted to the top of the
+file by Vitest, so a mock function defined normally above it can end up
+being referenced before it's initialized. `vi.hoisted()` fixes that by
+initializing the mock before the mocked module loads.
+
+## Problems faced
+
+Testing retrieval when no notes were available
+
+While demonstrating the new /notes/search endpoint, the API initially returned count: 0 and an empty results array. At first, this looked like a retrieval problem, but the endpoint was actually working correctly. The reason was that my Notes system currently uses in-memory storage, so notes exist only while the backend server is running. If the server restarts or reloads, the stored notes are removed from memory. Therefore, there were no notes available for retrievalService.ts to compare with the user's question. I fixed the demonstration by creating a note again and then searching for it without restarting the server.
+
+Vitest mock hoisting
+
+While writing the embedding service test, I initially declared the mock function outside vi.mock(). Since Vitest hoists vi.mock() calls to the top of the file, the mock function was being accessed before it was initialized, which threw a ReferenceError. I fixed it with vi.hoisted(), which initializes the mock before the mocked module is loaded.
