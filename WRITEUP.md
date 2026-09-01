@@ -10,11 +10,6 @@ each note into a searchable format (an embedding), stored alongside the
 note text. I also added secure APIs to add and view notes, protected by
 the same token-based auth as the rest of the app.
 
-I also learned how to properly mock things in Vitest — including a subtlety
-I hadn't run into before: `vi.mock()` calls are hoisted to the top of the
-file by Vitest, so a mock function defined normally above it can end up
-being referenced before it's initialized. `vi.hoisted()` fixes that by
-initializing the mock before the mocked module loads.
 
 ## Problems faced
 
