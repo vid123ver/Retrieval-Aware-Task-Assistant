@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTasks } from "./hooks/useTasks";
+import { useNotes } from "./hooks/useNotes";
+
 import TaskList from "./components/TaskList";
 import TaskForm from "./components/TaskForm";
 import SearchBar from "./components/SearchBar";
@@ -19,10 +21,30 @@ function App() {
     editTask,
   } = useTasks();
 
+  const {
+    notes,
+    isLoading: isNotesLoading,
+    error: notesError,
+    fetchNotes,
+    addNote,
+  } = useNotes();
+
   const [searchTerm, setSearchTerm] = useState("");
+
   const [statusFilter, setStatusFilter] =
     useState<StatusFilter>("all");
-  const [page, setPage] = useState<"tasks" | "chat">("tasks");
+
+  const [page, setPage] = useState<
+    "tasks" | "chat" | "notes"
+  >("tasks");
+
+  const [noteText, setNoteText] = useState("");
+
+  const [isAddingNote, setIsAddingNote] =
+    useState(false);
+
+  const [noteFormError, setNoteFormError] =
+    useState<string | null>(null);
 
   const filteredTasks = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -56,6 +78,41 @@ function App() {
   const hasActiveFilters =
     searchTerm.trim() !== "" ||
     statusFilter !== "all";
+
+  const handleAddNote = async (
+    event: React.FormEvent
+  ) => {
+    event.preventDefault();
+
+    const trimmedText = noteText.trim();
+
+    if (!trimmedText) {
+      setNoteFormError(
+        "Please enter some text for your note."
+      );
+
+      return;
+    }
+
+    setNoteFormError(null);
+    setIsAddingNote(true);
+
+    try {
+      await addNote(trimmedText);
+
+      setNoteText("");
+    } catch (error) {
+      if (error instanceof Error) {
+        setNoteFormError(error.message);
+      } else {
+        setNoteFormError(
+          "Unable to create the note. Please try again."
+        );
+      }
+    } finally {
+      setIsAddingNote(false);
+    }
+  };
 
   const renderTaskContent = () => {
     if (isLoading) {
@@ -125,9 +182,58 @@ function App() {
     );
   };
 
+  const renderNotesContent = () => {
+    if (isNotesLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white py-16 shadow-sm">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+
+          <p className="mt-4 text-sm font-medium text-gray-700">
+            Loading your notes...
+          </p>
+        </div>
+      );
+    }
+
+    if (notes.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white py-16 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-xl text-gray-600">
+            +
+          </div>
+
+          <h3 className="mt-4 text-base font-semibold text-gray-900">
+            No notes yet
+          </h3>
+
+          <p className="mt-1 max-w-sm text-sm text-gray-500">
+            Add a note and your AI assistant will be able
+            to use it when answering relevant questions.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {notes.map((note) => (
+          <div
+            key={note.id}
+            className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+          >
+            <p className="whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
+              {note.text}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">
@@ -135,11 +241,12 @@ function App() {
             </h1>
 
             <p className="mt-1 text-sm text-gray-500">
-              Manage your tasks efficiently
+              Manage your tasks, notes, and AI assistant
             </p>
           </div>
 
-          <nav className="flex w-fit items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+          <nav className="flex w-fit flex-wrap items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+
             <button
               type="button"
               onClick={() => setPage("tasks")}
@@ -154,6 +261,18 @@ function App() {
 
             <button
               type="button"
+              onClick={() => setPage("notes")}
+              className={`!m-0 rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                page === "notes"
+                  ? "!bg-gray-900 !text-white shadow-sm"
+                  : "!bg-transparent !text-gray-600 hover:!bg-gray-100 hover:!text-gray-900"
+              }`}
+            >
+              Notes
+            </button>
+
+            <button
+              type="button"
               onClick={() => setPage("chat")}
               className={`!m-0 rounded-lg px-4 py-2 text-sm font-semibold transition ${
                 page === "chat"
@@ -163,6 +282,7 @@ function App() {
             >
               AI Assistant
             </button>
+
           </nav>
         </header>
 
@@ -236,7 +356,9 @@ function App() {
 
               {!isLoading && tasks.length > 0 && (
                 <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
                   <div className="flex flex-wrap items-center gap-2">
+
                     <button
                       type="button"
                       onClick={() =>
@@ -278,6 +400,7 @@ function App() {
                     >
                       Completed
                     </button>
+
                   </div>
 
                   <p className="text-sm text-gray-500">
@@ -289,12 +412,15 @@ function App() {
                             : "tasks"
                         }`}
                   </p>
+
                 </div>
               )}
 
               {error && (
                 <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
+
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
                     <div>
                       <p className="font-medium text-red-800">
                         Unable to load tasks
@@ -312,16 +438,121 @@ function App() {
                     >
                       Retry
                     </button>
+
                   </div>
+
                 </div>
               )}
 
               {renderTaskContent()}
             </section>
           </>
+        ) : page === "notes" ? (
+          <section>
+
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">
+                My Notes
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Save information that your AI assistant can
+                retrieve when answering relevant questions.
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleAddNote}
+              className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+            >
+
+              <div className="mb-4">
+                <label
+                  htmlFor="note-text"
+                  className="mb-1.5 block text-sm font-medium text-gray-700"
+                >
+                  Add a new note
+                </label>
+
+                <textarea
+                  id="note-text"
+                  value={noteText}
+                  onChange={(event) => {
+                    setNoteText(event.target.value);
+
+                    if (noteFormError) {
+                      setNoteFormError(null);
+                    }
+                  }}
+                  disabled={isAddingNote}
+                  rows={5}
+                  placeholder="e.g. We decided to use JWT authentication for the login flow..."
+                  className="w-full resize-y rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:bg-gray-100"
+                />
+              </div>
+
+              {noteFormError && (
+                <div
+                  role="alert"
+                  className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
+                >
+                  {noteFormError}
+                </div>
+              )}
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={
+                    isAddingNote ||
+                    !noteText.trim()
+                  }
+                  className="!m-0 !rounded-lg !bg-gray-900 !px-5 !py-2.5 !text-sm !font-medium !text-white transition hover:!bg-gray-800 disabled:!cursor-not-allowed disabled:!opacity-50"
+                >
+                  {isAddingNote
+                    ? "Adding..."
+                    : "Add Note"}
+                </button>
+              </div>
+
+            </form>
+
+            {notesError && (
+              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                  <div>
+                    <p className="font-medium text-red-800">
+                      Unable to load notes
+                    </p>
+
+                    <p className="mt-1 text-sm text-red-600">
+                      {notesError}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={fetchNotes}
+                    className="!m-0 !rounded-lg !bg-red-600 !px-4 !py-2 !text-sm !font-medium !text-white hover:!bg-red-700"
+                  >
+                    Retry
+                  </button>
+
+                </div>
+
+              </div>
+            )}
+
+            {renderNotesContent()}
+          </section>
         ) : (
-          <ChatPage onTasksChanged={fetchTasks} />
+          <ChatPage
+            onTasksChanged={fetchTasks}
+          />
         )}
+
       </div>
     </div>
   );
