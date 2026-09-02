@@ -4,7 +4,8 @@ export type ChatActionType =
   | "create_task"
   | "update_task"
   | "delete_task"
-  | "list_tasks";
+  | "list_tasks"
+  | "answer_from_notes";
 
 export interface ChatAction {
   type: ChatActionType;

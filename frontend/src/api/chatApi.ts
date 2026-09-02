@@ -10,7 +10,8 @@ export type ChatActionType =
   | "create_task"
   | "update_task"
   | "delete_task"
-  | "list_tasks";
+  | "list_tasks"
+  | "answer_from_notes";
 
 export interface ChatAction {
   type: ChatActionType;
@@ -41,7 +42,10 @@ export const sendChatMessage = async (
   request: ChatRequest
 ): Promise<ChatResponse> => {
   try {
-    const response = await api.post<ChatResponse>("/chat", request);
+    const response = await api.post<ChatResponse>(
+      "/chat",
+      request
+    );
 
     return response.data;
   } catch (error) {
@@ -62,10 +66,12 @@ export const sendChatMessage = async (
         );
       }
 
-      const serverMessage = error.response?.data?.message;
+      const serverMessage =
+        error.response?.data?.message;
 
       throw new ChatApiError(
-        serverMessage || "Unable to communicate with the AI assistant.",
+        serverMessage ||
+          "Unable to communicate with the AI assistant.",
         status
       );
     }

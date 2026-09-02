@@ -1,23 +1,79 @@
 import api from "./api";
 import type { Task } from "../types/Task";
 
-export const getTasks = async (): Promise<Task[]> => {
-  const response = await api.get("/tasks");
+interface TaskListResponse {
+  success?: boolean;
+  tasks?: Task[];
+  data?: Task[];
+}
 
-  return response.data;
+interface TaskResponse {
+  success?: boolean;
+  task?: Task;
+  data?: Task;
+  id?: string;
+  title?: string;
+  completed?: boolean;
+  priority?: "low" | "medium" | "high";
+  dueDate?: string;
+}
+
+const extractTasks = (
+  responseData: Task[] | TaskListResponse
+): Task[] => {
+  if (Array.isArray(responseData)) {
+    return responseData;
+  }
+
+  if (Array.isArray(responseData.tasks)) {
+    return responseData.tasks;
+  }
+
+  if (Array.isArray(responseData.data)) {
+    return responseData.data;
+  }
+
+  return [];
+};
+
+const extractTask = (
+  responseData: Task | TaskResponse
+): Task => {
+  if ("task" in responseData && responseData.task) {
+    return responseData.task;
+  }
+
+  if ("data" in responseData && responseData.data) {
+    return responseData.data;
+  }
+
+  return responseData as Task;
+};
+
+export const getTasks = async (): Promise<Task[]> => {
+  const response = await api.get<Task[] | TaskListResponse>(
+    "/tasks"
+  );
+
+  return extractTasks(response.data);
 };
 
 export const addTask = async (
   title: string,
-  dueDate?: string
+  dueDate?: string,
+  priority?: "low" | "medium" | "high"
 ): Promise<Task> => {
   try {
-    const response = await api.post("/tasks", {
-      title,
-      dueDate,
-    });
+    const response = await api.post<Task | TaskResponse>(
+      "/tasks",
+      {
+        title,
+        dueDate,
+        priority,
+      }
+    );
 
-    return response.data;
+    return extractTask(response.data);
   } catch (error: any) {
     if (error.response?.status === 409) {
       const message =
@@ -42,20 +98,22 @@ export const updateTask = async (
     dueDate?: string;
   }
 ): Promise<Task> => {
-  const response = await api.put(
+  const response = await api.put<Task | TaskResponse>(
     `/tasks/${id}`,
     updates
   );
 
-  return response.data;
+  return extractTask(response.data);
 };
 
 export const toggleTask = async (
   id: string
 ): Promise<Task> => {
-  const response = await api.patch(`/tasks/${id}`);
+  const response = await api.patch<Task | TaskResponse>(
+    `/tasks/${id}`
+  );
 
-  return response.data;
+  return extractTask(response.data);
 };
 
 export const deleteTask = async (

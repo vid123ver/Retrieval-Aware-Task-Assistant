@@ -27,12 +27,16 @@ export const useTasks = () => {
 
   const addTask = async (
     title: string,
-    dueDate?: string
+    dueDate?: string,
+    priority?: "low" | "medium" | "high"
   ) => {
+    setError(null);
+
     try {
       const newTask = await taskApi.addTask(
         title,
-        dueDate
+        dueDate,
+        priority
       );
 
       setTasks((previousTasks) => [
@@ -61,11 +65,14 @@ export const useTasks = () => {
     );
 
     try {
-      const updatedTask = await taskApi.toggleTask(id);
+      const updatedTask =
+        await taskApi.toggleTask(id);
 
       setTasks((currentTasks) =>
         currentTasks.map((task) =>
-          task.id === id ? updatedTask : task
+          task.id === id
+            ? updatedTask
+            : task
         )
       );
     } catch {
@@ -80,7 +87,9 @@ export const useTasks = () => {
     const previousTasks = tasks;
 
     setTasks((currentTasks) =>
-      currentTasks.filter((task) => task.id !== id)
+      currentTasks.filter(
+        (task) => task.id !== id
+      )
     );
 
     try {
@@ -117,14 +126,15 @@ export const useTasks = () => {
     );
 
     try {
-      const updatedTask = await taskApi.updateTask(
-        task.id,
-        {
-          title: updates.title,
-          priority: updates.priority,
-          dueDate: updates.dueDate,
-        }
-      );
+      const updatedTask =
+        await taskApi.updateTask(
+          task.id,
+          {
+            title: updates.title,
+            priority: updates.priority,
+            dueDate: updates.dueDate,
+          }
+        );
 
       setTasks((currentTasks) =>
         currentTasks.map((currentTask) =>
