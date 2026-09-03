@@ -2,12 +2,11 @@
 
 ## What I learned
 
-In this phase, I learned how retrieval (RAG) works from start to end. I learned how text is converted into an embedding, how embeddings are compared using cosine similarity, and how the most relevant notes are found based on a user's question.
+Phase 1 — Testing: I learned how to properly test each layer of the app — pure functions with plain unit tests, services by mocking the repository layer, and full API routes with Supertest. Writing a regression test for a real Assignment 3 bug made it click why tests matter: it's the difference between hoping code works and proving it.
 
-I created a notes system where users can save notes. Gemini converts each note into an embedding, which is stored along with the note text. I also added secure APIs to create and view notes using the same token authentication used in the rest of the application.
+Phase 2 — Retrieval: I learned how retrieval (RAG) works end to end — converting text into embeddings, comparing them with cosine similarity, and using the most relevant notes to ground an answer instead of letting the model guess. I built the notes system, the /notes/search endpoint, and wired it into the chat's tool-calling alongside the task tools.
 
-I also created a new /notes/search API endpoint so I could directly test whether a user's question was finding the correct notes.
-
+Phase 3 — UI + Polish: I learned how to close the loop by connecting the frontend to the new backend features — a Notes panel to add/view notes, and a "From your notes" badge in chat so it's visible when an answer came from retrieval instead of a task action. This phase mainly taught me how much time integration and connecting-the-dots takes compared to building each piece alone.
 ## Problems faced
 
 Testing retrieval when no notes were available:
