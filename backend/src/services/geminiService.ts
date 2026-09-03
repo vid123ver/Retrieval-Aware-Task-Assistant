@@ -311,7 +311,7 @@ class GeminiService {
           "No response from Gemini.",
         actions,
       };
-    } catch (error) {
+       } catch (error) {
       console.error("Gemini API Error:", error);
 
       const status = (
@@ -320,17 +320,25 @@ class GeminiService {
 
       if (status === 429) {
         throw new AppError(
-          "Gemini API quota exceeded. Please wait a while or try again later.",
+          "The AI service quota has been reached. Please try again later.",
           429
         );
       }
 
-      if (error instanceof Error) {
+      if (status === 503) {
+        throw new AppError(
+          "The AI service is temporarily busy. Please try again in a moment.",
+          503
+        );
+      }
+
+      if (error instanceof AppError) {
         throw error;
       }
 
-      throw new Error(
-        "Unknown error occurred."
+      throw new AppError(
+        "Unable to process your request. Please try again.",
+        500
       );
     }
   }
