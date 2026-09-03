@@ -4,7 +4,15 @@ import type { Note } from "../types/Note";
 export const getNotes = async (): Promise<Note[]> => {
   const response = await api.get("/notes");
 
-  return response.data;
+  if (Array.isArray(response.data)) {
+    return response.data;
+  }
+
+  if (Array.isArray(response.data.notes)) {
+    return response.data.notes;
+  }
+
+  return [];
 };
 
 export const addNote = async (
@@ -14,6 +22,10 @@ export const addNote = async (
     const response = await api.post("/notes", {
       text,
     });
+
+    if (response.data.note) {
+      return response.data.note;
+    }
 
     return response.data;
   } catch {

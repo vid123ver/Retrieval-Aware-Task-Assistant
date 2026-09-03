@@ -17,7 +17,7 @@ export const useNotes = () => {
     try {
       const data = await noteApi.getNotes();
 
-      setNotes(data);
+      setNotes(Array.isArray(data) ? data : []);
     } catch {
       setError(GENERIC_ERROR_MESSAGE);
     } finally {
